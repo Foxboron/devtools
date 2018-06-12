@@ -1,0 +1,26 @@
+package container
+
+type ContainerBackend int
+
+const (
+	Fs ContainerBackend = iota
+	Btrfs
+	Overlay
+	Rsync
+)
+
+type Container interface {
+	setup() error
+	addSnapshot(name string) error
+	removeSnapshot(name string) error
+	destroy() error
+}
+
+func Test(name string) error {
+    return nil
+}
+
+
+
+
+
