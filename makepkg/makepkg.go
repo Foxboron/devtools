@@ -71,7 +71,7 @@ func ParseMakepkgConf(path string) map[string]string {
 	return config
 }
 
-func initMakepkgConf() {
+func InitMakepkgConf() {
 	// TODO: Should probably not assume Arch Linux
 	makepkgCache = ParseMakepkgConf("/etc/makepkg.conf")
 
@@ -101,5 +101,5 @@ func initMakepkgConf() {
 }
 
 func init() {
-	initMakepkgConf()
+	InitMakepkgConf()
 }
