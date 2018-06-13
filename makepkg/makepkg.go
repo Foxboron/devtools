@@ -81,11 +81,19 @@ func InitMakepkgConf() {
 		configPath = xdg
 	} else {
 		uid := os.Getenv("SUDO_UID")
-		user, err := user.LookupId(uid)
-		if err != nil {
-			log.Fatal(err)
+		if uid != "" {
+			user, err := user.LookupId(uid)
+			if err != nil {
+				log.Fatal(err)
+			}
+			configPath = user.HomeDir
+		} else {
+			user, err := user.Current()
+			if err != nil {
+				log.Fatal(err)
+			}
+			configPath = user.HomeDir
 		}
-		configPath = user.HomeDir
 	}
 	configPath = path.Join(configPath, "config", "pacman", "makepkg.conf")
 	if _, err := os.Stat(configPath); err == nil {
