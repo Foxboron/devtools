@@ -95,15 +95,15 @@ func InitMakepkgConf() {
 			configPath = user.HomeDir
 		}
 	}
-	configPath = path.Join(configPath, "config", "pacman", "makepkg.conf")
-	if _, err := os.Stat(configPath); err == nil {
-		userMakepkgCache = ParseMakepkgConf(configPath)
+	makepkgConfPath := path.Join(configPath, "config", "pacman", "makepkg.conf")
+	if _, err := os.Stat(makepkgConfPath); err == nil {
+		userMakepkgCache = ParseMakepkgConf(makepkgConfPath)
 		return
 	}
 
-	configPath = path.Join(configPath, ".makepkg.conf")
-	if _, err := os.Stat(configPath); err == nil {
-		userMakepkgCache = ParseMakepkgConf(configPath)
+	makepkgConfPath = path.Join(configPath, ".makepkg.conf")
+	if _, err := os.Stat(makepkgConfPath); err == nil {
+		userMakepkgCache = ParseMakepkgConf(makepkgConfPath)
 		return
 	}
 }
