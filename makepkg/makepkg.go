@@ -10,14 +10,25 @@ import (
 )
 
 var (
-	env              = make(map[string]string)
-	makepkgCache     = make(map[string]string)
 	userMakepkgCache = make(map[string]string)
+	makepkgCache     = make(map[string]string)
 )
 
-func GetMakepkgConfFile() string {
-	// var content string
-	return ""
+// GetMakepkgConf returns the combines variables from the user config, system config and environment
+func GetMakepkgConf() map[string]string {
+	makepkg := make(map[string]string)
+	for key, value := range makepkgCache {
+		makepkg[key] = value
+	}
+	for key, value := range userMakepkgCache {
+		makepkg[key] = value
+	}
+	for key := range makepkg {
+		if val := os.Getenv(key); key != "" {
+			makepkg[key] = val
+		}
+	}
+	return makepkg
 }
 
 // MakepkgConf checks first the env for variables, then defers to the user makepkg.conf before the system makepkg.conf
