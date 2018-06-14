@@ -22,22 +22,42 @@ var (
 	Plain  = color.New().PrintlnFunc()
 )
 
+func UseColors(use bool) {
+	color.NoColor = !use
+}
+
+// Functions where the format string is supplied
+
+func Msgf(format string, values ...interface{}) {
+	fmt.Fprintln(Stdout, green("==> ")+bold(fmt.Sprintf(format, values...)))
+}
+
+func Msg2f(format string, values ...interface{}) {
+	fmt.Fprintln(Stdout, blue("  -> ")+bold(fmt.Sprintf(format, values...)))
+}
+
+func Warningf(format string, values ...interface{}) {
+	fmt.Fprintln(Stdout, yellow("==> WARNING: ")+bold(fmt.Sprintf(format, values...)))
+}
+
+func Errorf(format string, values ...interface{}) {
+	fmt.Fprintln(Stdout, red("==> ERROR: ")+bold(fmt.Sprintf(format, values...)))
+}
+
+// Functions where only one argument is given
+
 func Msg(msg interface{}) {
-	fmt.Fprintln(Stdout, green("==> ") + bold(fmt.Sprintf("%+v", msg)))
+	Msgf("%+v", msg)
 }
 
 func Msg2(msg interface{}) {
-	fmt.Fprintln(Stdout, blue("  -> ") + bold(fmt.Sprintf("%+v", msg)))
+	Msg2f("%+v", msg)
 }
 
 func Warning(msg interface{}) {
-	fmt.Fprintln(Stdout, yellow("==> WARNING: ") + bold(fmt.Sprintf("%+v", msg)))
+	Warningf("%+v", msg)
 }
 
 func Error(msg interface{}) {
-	fmt.Fprintln(Stdout, red("==> ERROR: ") + bold(fmt.Sprintf("%+v", msg)))
-}
-
-func UseColors(use bool) {
-	color.NoColor = !use
+	Errorf("%+v", msg)
 }

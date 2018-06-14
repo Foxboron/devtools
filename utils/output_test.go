@@ -2,8 +2,8 @@ package utils
 
 import (
 	"bytes"
-	"testing"
 	"os"
+	"testing"
 )
 
 func TestPrint(t *testing.T) {
@@ -44,7 +44,7 @@ func TestErrorNoColor(t *testing.T) {
 
 func TestStructNoColor(t *testing.T) {
 	var buf bytes.Buffer
-	type cow struct { says string }
+	type cow struct{ says string }
 	Stdout = &buf
 	UseColors(false)
 	defer resetOutput()
@@ -52,4 +52,9 @@ func TestStructNoColor(t *testing.T) {
 	if buf.String() != "  -> &{says:moo}\n" {
 		t.Fail()
 	}
+}
+
+func TestMsgf(t *testing.T) {
+	type cow struct{ says string }
+	Msgf("%s %d %f %+v", "hi", 1, 0.7, &cow{says: "moo"})
 }
