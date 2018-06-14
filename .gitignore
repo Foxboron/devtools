@@ -1,0 +1,9 @@
+devtools
+*.bak
+*.swp
+*.tmp
+*~
+*.o
+*.pyc
+*.pyo
+*ponies*
