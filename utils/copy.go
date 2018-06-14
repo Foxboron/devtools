@@ -1,4 +1,22 @@
-/* MIT License
+package utils
+
+import (
+	"errors"
+	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+)
+
+var errSourceNotDirectory = errors.New("source is not a directory")
+var errDestinationExists = errors.New("destination already exists")
+
+/*
+ *
+ * From: https://gist.github.com/kuznero/41acd2afdbe7cfd8e135c4573041e1da
+ *
+ *
+ * MIT License
  *
  * Copyright (c) 2017 Roland Singer [roland.singer@desertbit.com]
  *
@@ -21,132 +39,129 @@
  * SOFTWARE.
  */
 
-package utils
+// CopyFile copies the contents from one file to another.
+// If the file does not exist, it will be created.
+// If the file exists, the contents will be replaced.
+// The file mode of the source file will also be set on the destination file.
+// The copied data is synced after being copied.
+func CopyFile(source, destination string) (err error) {
 
-import (
-	"fmt"
-	"io"
-	"io/ioutil"
-	"log"
-	"os"
-	"path/filepath"
-	"syscall"
-)
-
-// CopyFile copies the contents of the file named src to the file named
-// by dst. The file will be created if it does not already exist. If the
-// destination file exists, all it's contents will be replaced by the contents
-// of the source file. The file mode will be copied from the source and
-// the copied data is synced/flushed to stable storage.
-func CopyFile(src, dst string) (err error) {
-	in, err := os.Open(src)
+	// Open the source file
+	in, err := os.Open(source)
 	if err != nil {
 		return
 	}
 	defer in.Close()
 
-	out, err := os.Create(dst)
+	// Create a new file, if it doesn't already exist
+	out, err := os.Create(destination)
 	if err != nil {
 		return
 	}
+
+	// If the output stream can not be closed at the end,
+	// return that as the error.
 	defer func() {
 		if e := out.Close(); e != nil {
 			err = e
 		}
 	}()
 
+	// Copy over the data
 	_, err = io.Copy(out, in)
 	if err != nil {
 		return
 	}
 
+	// Sync/flush
 	err = out.Sync()
 	if err != nil {
 		return
 	}
 
-	si, err := os.Stat(src)
-	if err != nil {
-		return
-	}
-	err = os.Chmod(dst, si.Mode())
-	if err != nil {
-		return
-	}
-	err = os.Chmod(dst, si.Mode())
+	// Retrieve the file mode
+	si, err := os.Stat(source)
 	if err != nil {
 		return
 	}
 
-	uid := int(si.Sys().(*syscall.Stat_t).Uid)
-	gid := int(si.Sys().(*syscall.Stat_t).Gid)
-	err = os.Chown(dst, uid, gid)
+	// Apply the file mode to the destination file
+	err = os.Chmod(destination, si.Mode())
 	if err != nil {
 		return
 	}
 
-	return
+	// Success
+	return nil
 }
 
-// CopyDir recursively copies a directory tree, attempting to preserve permissions.
-// Source directory must exist, destination directory must *not* exist.
+// CopyDir recursively copies a directory tree while attempting to
+// preserve permissions.
+// * The source directory must exist.
+// * The destination directory must *not* exist.
 // Symlinks are ignored and skipped.
-func CopyDir(src string, dst string) (err error) {
-	src = filepath.Clean(src)
-	dst = filepath.Clean(dst)
+func CopyDir(source, destination string) error {
 
-	si, err := os.Stat(src)
+	// Clean and shorten the paths to the respective directories
+	srcDir := filepath.Clean(source)
+	dstDir := filepath.Clean(destination)
+
+	// Check if the source directory is there and valid
+	sourceInfo, err := os.Stat(srcDir)
 	if err != nil {
 		return err
 	}
-	if !si.IsDir() {
-		return fmt.Errorf("source is not a directory")
+	if !sourceInfo.IsDir() {
+		return errSourceNotDirectory
 	}
 
-	_, err = os.Stat(dst)
-	if err != nil && !os.IsNotExist(err) {
-		return
+	// Check the destination directory is not there
+	if _, err := os.Stat(dstDir); err == nil {
+		return errDestinationExists
+	} else if os.IsExist(err) {
+		return err
 	}
 
-	err = os.MkdirAll(dst, si.Mode())
+	// Create the destination directory
+	if err := os.MkdirAll(dstDir, sourceInfo.Mode()); err != nil {
+		return err
+	}
+
+	// Retrieve a list of entries from the source directory
+	entries, err := ioutil.ReadDir(srcDir)
 	if err != nil {
 		return err
 	}
 
-	entries, err := ioutil.ReadDir(src)
-	if err != nil {
-		return
-	}
-
+	// Copy over files, recursively
 	for _, entry := range entries {
-		srcPath := filepath.Join(src, entry.Name())
-		dstPath := filepath.Join(dst, entry.Name())
-		if entry.IsDir() {
-			err = CopyDir(srcPath, dstPath)
-			if err != nil {
-				return
-			}
-		} else {
-			// Skip symlinks.
+		fileName := entry.Name()
+		srcPath := filepath.Join(srcDir, fileName)
+		dstPath := filepath.Join(dstDir, fileName)
+
+		// File or directory?
+		if !entry.IsDir() {
+
+			// Skip symlinks
 			if entry.Mode()&os.ModeSymlink != 0 {
 				continue
 			}
-			// Remove this with just continue of dirmngr gets fucked
-			if entry.Mode()&os.ModeSocket != 0 {
-				file, err := os.OpenFile(dstPath, os.O_RDWR|os.O_CREATE, os.ModeSocket)
-				if err != nil {
-					log.Fatal(err)
-				}
-				file.Close()
-				continue
+
+			// Copy over file
+			if err = CopyFile(srcPath, dstPath); err != nil {
+				return err
 			}
 
-			err = CopyFile(srcPath, dstPath)
-			if err != nil {
-				return
+		} else {
+
+			// Copy over directory
+			if err = CopyDir(srcPath, dstPath); err != nil {
+				return err
 			}
+
 		}
 	}
 
-	return
+	// Success
+	return nil
 }
