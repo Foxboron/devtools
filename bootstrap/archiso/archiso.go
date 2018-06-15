@@ -37,7 +37,7 @@ func (a *Archiso) DownloadISO() (string, error) {
 	}
 	isoPath := path.Join(a.TmpPath, a.ISOName)
 	if _, err := os.Stat(isoPath); os.IsNotExist(err) {
-		utils.Msg2(fmt.Sprintf("Downloading %s...", a.ISOName))
+		utils.Msg2f("Downloading %s...", a.ISOName)
 		utils.DownloadFile(isoPath, a.Mirror+a.ISOName)
 		utils.DownloadFile(isoPath+".sig", a.Mirror+a.ISOName+".sig")
 		err := utils.VerifySignature(path.Join(a.TmpPath, a.ISOName), path.Join(a.TmpPath, a.ISOName+".sig"))
