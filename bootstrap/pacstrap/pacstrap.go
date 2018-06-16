@@ -2,11 +2,9 @@ package pacstrap
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
-	"path"
 
 	alpm "github.com/Jguer/go-alpm"
 )
@@ -25,21 +23,6 @@ type Pacstrap struct {
 	Packages   []string
 }
 
-func (p *Pacstrap) SetupConfig(rootContainerPath string) error {
-	fileInfo := path.Join(rootContainerPath, "etc", "locale.gen")
-	err := ioutil.WriteFile(fileInfo, []byte("en_US.UTF-8 UTF-8"), 0644)
-	if err != nil {
-		return fmt.Errorf("Failed to write filesystem file")
-	}
-
-	fileInfo = path.Join(rootContainerPath, "etc", "locale.conf")
-	err = ioutil.WriteFile(fileInfo, []byte("LANG=en_US.UTF-8"), 0644)
-	if err != nil {
-		return fmt.Errorf("Failed to write filesystem file")
-	}
-	return nil
-}
-
 func (p *Pacstrap) Init(path string) error {
 	var cmd *exec.Cmd
 	argArr := make([]string, 0)
@@ -55,7 +38,6 @@ func (p *Pacstrap) Init(path string) error {
 	for _, v := range p.Packages {
 		argArr = append(argArr, v)
 	}
-	fmt.Println(argArr)
 	cmd = exec.Command(argArr[0], argArr[1:]...)
 	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 	err := cmd.Run()
@@ -63,10 +45,6 @@ func (p *Pacstrap) Init(path string) error {
 		return fmt.Errorf("Can't setup locale")
 	}
 
-	err = p.SetupConfig(path)
-	if err != nil {
-		return fmt.Errorf("Can't setup locale")
-	}
 	return nil
 }
 
