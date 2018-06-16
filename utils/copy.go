@@ -147,6 +147,11 @@ func CopyDir(source, destination string) error {
 				continue
 			}
 
+			// Skip sockets. Probably don't need dirmngr
+			if entry.Mode()&os.ModeSocket != 0 {
+				continue
+			}
+
 			// Copy over file
 			if err = CopyFile(srcPath, dstPath); err != nil {
 				return err
