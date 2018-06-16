@@ -19,6 +19,11 @@ const (
 	makepkgCommand = "sudo --preserve-env=SOURCE_DATE_EPOCH -iu builduser bash -c 'cd /startdir; makepkg \"$@\"' -bash "
 )
 
+var (
+	// Fixed paths
+	hostGnupgPath = path.Join("/etc", "pacman.d", "gnupg")
+)
+
 type Builder struct {
 	Bootstrap     bootstrap.Bootstrap
 	Backend       backend.Backend
@@ -30,18 +35,6 @@ type Builder struct {
 	MakepkgConf   string
 	PacmanConf    string
 }
-
-var (
-	// Fixed paths
-	hostGnupgPath = path.Join("/etc", "pacman.d", "gnupg")
-
-	// Initial files (filename:contents)
-	initFileMap = map[string][]byte{
-		".arch-chroot":     []byte("v4"),
-		"/etc/locale.conf": []byte("LANG=en_US.UTF-8"),
-		"/etc/locale.gen":  []byte("en_US.UTF-8 UTF-8"),
-	}
-)
 
 // SetMirrorList reads the mirrorlist from pacman.conf and writes them to the
 // container. Only includes servers used by the [core] repository.
@@ -143,17 +136,6 @@ func (b *Builder) Build() error {
 	return nil
 }
 
-// CreateFiles takes a map over filenames and contents and creates
-// those files in the container.
-func (b *Builder) CreateFiles(fileMap map[string][]byte) error {
-	for filename, contents := range fileMap {
-		if err := utils.CreateFile(b.ContainerPath, filename, contents, 0644); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // Init initializes the container
 func (b *Builder) Init() error {
 	// No need to initialize an initialized container
@@ -179,7 +161,7 @@ func (b *Builder) Init() error {
 		return err
 	}
 	// Create the initial files in the container
-	if err := b.CreateFiles(initFileMap); err != nil {
+	if err := CreateFiles(b.ContainerPath, initFileMap); err != nil {
 		return err
 	}
 	// Generate locale files in the container
@@ -197,31 +179,12 @@ func (b *Builder) Init() error {
 	return nil
 }
 
-// ContainerFunction can perform actions on a Container
-type ContainerFunction func(container.Container) error
-
-// ContainerFunctions is a slice of ContainerFunction
-type ContainerFunctions []ContainerFunction
-
-// WithContainer takes a slice of functions that takes a Container
-// as an argument and applies them to the container within the Builder.
-// If there is an error, the rest of the functions will not be called.
-func (b *Builder) WithContainer(cfs ContainerFunctions) error {
-	c := b.Container
-	for _, cf := range cfs {
-		if err := cf(c); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // SetupChrootConfig -
 func (b *Builder) SetupChrootConfig() error {
 	if err := b.SetupGnupg(); err != nil {
 		return err
 	}
-	return b.WithContainer(ContainerFunctions{
+	return WithContainer(b.Container, ContainerActions{
 		utils.SetupUser,
 		utils.SetupMakepkgDirectories,
 		utils.SetupMakepkg,
