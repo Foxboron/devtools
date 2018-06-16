@@ -82,7 +82,7 @@ func main() {
 	}
 	utils.Msg(fmt.Sprintf("Synchronizing chroot copy [%s] -> [%s]", "root", containerName))
 	// build.SetEnv(*Environment)
-	err = build.Build()
+	_, err = build.Build()
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -93,38 +93,45 @@ func SetupMakepkg(container container.Container) error {
 	return nil
 }
 
-func MoveProducts(container container.Container) error {
-	// pkgdest
+// MoveProducts moves the created products from the container to
+// the desired locations.
+// Returns a map of {PKGDEST, LOGDEST, SRCPKGDEST} -> filename -> destination path
+func MoveProducts(container container.Container) (map[string]map[string]string, error) {
+	var products = make(map[string]map[string]string)
 
+	// pkgdest
 	pkgdest := makepkg.MakepkgConf("PKGDEST")
 	if pkgdest == "" {
 		pkgdest, _ = os.Getwd()
 	}
 
-	err := CopyDir(path.Join(container.GetPath(), "pkgdest"), pkgdest)
+	files, err := CopyDir(path.Join(container.GetPath(), "pkgdest"), pkgdest)
 	if err != nil {
-		return err
+		return products, err
 	}
+	products["PKGDEST"] = files
 
 	// logdest
 	logdest := makepkg.MakepkgConf("LOGDEST")
 	if logdest == "" {
 		logdest, _ = os.Getwd()
 	}
-	err = CopyDir(path.Join(container.GetPath(), "logdest"), logdest)
+	files, err = CopyDir(path.Join(container.GetPath(), "logdest"), logdest)
 	if err != nil {
-		return err
+		return products, err
 	}
+	products["LOGDEST"] = files
 
 	// // srcpkgdest
 	srcpkgdest := makepkg.MakepkgConf("SRCPKGDEST")
 	if srcpkgdest == "" {
 		srcpkgdest, _ = os.Getwd()
 	}
-	err = CopyDir(path.Join(container.GetPath(), "srcpkgdest"), srcpkgdest)
+	files, err = CopyDir(path.Join(container.GetPath(), "srcpkgdest"), srcpkgdest)
 	if err != nil {
-		return err
+		return products, err
 	}
+	products["SRCPKGDEST"] = files
 
-	return nil
+	return products, nil
 }

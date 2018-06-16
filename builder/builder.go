@@ -113,9 +113,11 @@ func (b *Builder) SetupConfig() error {
 	return nil
 }
 
-func (b *Builder) Build() error {
+func (b *Builder) Build() (map[string]map[string]string, error) {
+	var files = make(map[string]map[string]string)
+
 	if err := DownloadSources(b); err != nil {
-		return fmt.Errorf("Could not download sources: %s", err)
+		return files, fmt.Errorf("Could not download sources: %s", err)
 	}
 	srcdest := makepkg.MakepkgConf("SRCDEST")
 	if srcdest == "" {
@@ -124,16 +126,17 @@ func (b *Builder) Build() error {
 	b.Container.SetBindDir(srcdest, "/srcdest")
 	pwd, err := os.Getwd()
 	if err != nil {
-		return err
+		return files, err
 	}
 	b.Container.SetBindDir(pwd, "/startdir")
 	if err := b.Container.Exec(makepkgCommand + makepkgArgs); err != nil {
-		return err
+		return files, err
 	}
-	if err := utils.MoveProducts(b.Container); err != nil {
-		return err
+	files, err = utils.MoveProducts(b.Container)
+	if err != nil {
+		return files, err
 	}
-	return nil
+	return files, nil
 }
 
 // Init initializes the container
