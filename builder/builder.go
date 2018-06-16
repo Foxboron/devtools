@@ -72,7 +72,7 @@ func (b *Builder) SetMirrorList() error {
 func (b *Builder) SetupGnupg() error {
 	containerGnupg := path.Join(b.ContainerPath, "etc", "pacman.d", "gnupg")
 	os.RemoveAll(containerGnupg)
-	if err := utils.CopyDir(hostGnupgPath, containerGnupg); err != nil {
+	if _, err := utils.CopyDir(hostGnupgPath, containerGnupg); err != nil {
 		return errors.New("Could not copy /etc/pacman.d/gnupg from host machine")
 	}
 	return nil

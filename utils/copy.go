@@ -99,8 +99,10 @@ func CopyFile(source, destination string) (err error) {
 // preserve permissions.
 // * The source directory must exist.
 // * The destination directory must *not* exist.
-// Symlinks are ignored and skipped.
-func CopyDir(source, destination string) error {
+// Symlinks and Sockets are ignored and skipped.
+// Returns a map of fileName -> destination path
+func CopyDir(source, destination string) (map[string]string, error) {
+	var files = make(map[string]string)
 
 	// Clean and shorten the paths to the respective directories
 	srcDir := filepath.Clean(source)
@@ -109,28 +111,21 @@ func CopyDir(source, destination string) error {
 	// Check if the source directory is there and valid
 	sourceInfo, err := os.Stat(srcDir)
 	if err != nil {
-		return err
+		return files, err
 	}
 	if !sourceInfo.IsDir() {
-		return errSourceNotDirectory
-	}
-
-	// Check the destination directory is not there
-	if _, err := os.Stat(dstDir); err == nil {
-		return errDestinationExists
-	} else if os.IsExist(err) {
-		return err
+		return files, errSourceNotDirectory
 	}
 
 	// Create the destination directory
 	if err := os.MkdirAll(dstDir, sourceInfo.Mode()); err != nil {
-		return err
+		return files, err
 	}
 
 	// Retrieve a list of entries from the source directory
 	entries, err := ioutil.ReadDir(srcDir)
 	if err != nil {
-		return err
+		return files, err
 	}
 
 	// Copy over files, recursively
@@ -154,19 +149,24 @@ func CopyDir(source, destination string) error {
 
 			// Copy over file
 			if err = CopyFile(srcPath, dstPath); err != nil {
-				return err
+				return files, err
 			}
+
+			files[fileName] = dstPath
 
 		} else {
 
 			// Copy over directory
-			if err = CopyDir(srcPath, dstPath); err != nil {
-				return err
+			recursiveFiles, err := CopyDir(srcPath, dstPath)
+			if err != nil {
+				return files, err
 			}
-
+			for k, v := range recursiveFiles {
+				files[k] = v
+			}
 		}
 	}
 
 	// Success
-	return nil
+	return files, nil
 }
