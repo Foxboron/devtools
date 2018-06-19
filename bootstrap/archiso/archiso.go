@@ -31,7 +31,7 @@ func (a *Archiso) DownloadISO() (string, error) {
 	if a.TmpPath == "" {
 		err := os.MkdirAll(IsoCacheDir, 0755)
 		if err != nil {
-			log.Fatal(err)
+			return "", fmt.Errorf("could not create directory")
 		}
 		a.TmpPath = IsoCacheDir
 	}
@@ -42,8 +42,7 @@ func (a *Archiso) DownloadISO() (string, error) {
 		utils.DownloadFile(isoPath+".sig", a.Mirror+a.ISOName+".sig")
 		err := utils.VerifySignature(path.Join(a.TmpPath, a.ISOName), path.Join(a.TmpPath, a.ISOName+".sig"))
 		if err != nil {
-			utils.Error("Signature check failed!")
-			os.Exit(1)
+			return "", fmt.Errorf("signature check failed")
 		}
 	}
 	return isoPath, nil
@@ -55,8 +54,6 @@ func (a *Archiso) Init(dst string) error {
 		return err
 	}
 	if _, err := os.Stat(path.Join(dst, ".arch-chroot")); os.IsNotExist(err) {
-		fmt.Println(isoPath)
-		fmt.Println(dst)
 		err = utils.Untar(isoPath, dst)
 		if err != nil {
 			return fmt.Errorf("Could not untar ISO: %s", err)
@@ -74,7 +71,6 @@ func GetArchIsoName() string {
 func NewArchiso(PacmanConf string) bootstrap.Bootstrap {
 	b, err := os.Open(PacmanConf)
 	if err != nil {
-		fmt.Print(err)
 	}
 
 	pacmanconf, err := alpm.ParseConfig(b)
