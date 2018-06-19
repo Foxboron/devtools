@@ -1,8 +1,8 @@
 package backend
 
 import (
+	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"path"
 )
@@ -36,16 +36,16 @@ func GetBackend(name string) BackendFilesystem {
 	}
 }
 
-func GetBackendFromContainer(containerPath string) BackendFilesystem {
-	fsFile := path.Join(containerPath, "root", ".arch-chroot-fs")
+func GetBackendFromContainer(containerPath string) (BackendFilesystem, error) {
+	fsFile := path.Join(containerPath, ".arch-chroot-fs")
 	if _, err := os.Stat(fsFile); os.IsNotExist(err) {
-		return -1
+		return -1, fmt.Errorf("Not a container")
 	}
 	buf, err := ioutil.ReadFile(fsFile)
 	if err != nil {
-		log.Fatal(err)
+		return -1, fmt.Errorf("Not a container")
 	}
-	return GetBackend(string(buf))
+	return GetBackend(string(buf)), nil
 }
 
 func CheckContainerExists(containerPath string) bool {
