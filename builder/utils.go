@@ -7,7 +7,7 @@ import (
 
 var (
 	// Initial files (filename:contents)
-	initFileMap = map[string][]byte{
+	InitFileMap = map[string][]byte{
 		".arch-chroot":     []byte("v4"),
 		"/etc/locale.conf": []byte("LANG=en_US.UTF-8"),
 		"/etc/locale.gen":  []byte("en_US.UTF-8 UTF-8"),

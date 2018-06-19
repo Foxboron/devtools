@@ -164,7 +164,7 @@ func (b *Builder) Init() error {
 		return err
 	}
 	// Create the initial files in the container
-	if err := CreateFiles(b.ContainerPath, initFileMap); err != nil {
+	if err := CreateFiles(b.ContainerPath, InitFileMap); err != nil {
 		return err
 	}
 	// Generate locale files in the container
