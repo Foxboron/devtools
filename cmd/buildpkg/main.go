@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/user"
+	"path"
 
 	"github.com/foxboron/devtools/backend"
 	"github.com/foxboron/devtools/backend/fs/overlay"
@@ -33,10 +34,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Define the path all our container should fork from
+	rootBuildPath := path.Join(BuildPath, "root")
+
 	var backendInit backend.Backend
 	switch backend.GetBackend(Backend) {
 	case backend.Overlay:
-		backendInit = overlay.NewOverlay(BuildPath)
+		backendInit = overlay.NewOverlay(rootBuildPath)
 	default:
 		utils.Error("Invalid filesystem")
 		os.Exit(1)
@@ -51,10 +55,10 @@ func main() {
 	}
 
 	build := &builder.Builder{
-		Path:         BuildPath,
+		Path:         rootBuildPath,
 		Backend:      backendInit,
 		Bootstrap:    bootstrapInit,
-		Container:    nspawn.NewNspawn(""),
+		Container:    nspawn.NewNspawn(rootBuildPath),
 		Repository:   Repository,
 		Architecture: Architecture,
 		MakepkgConf:  MakepkgConf,

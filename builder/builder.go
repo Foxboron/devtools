@@ -219,8 +219,8 @@ func (b *Builder) Destroy(name string) error {
 	if err := b.Backend.RemoveSnapshot(name); err != nil {
 		return err
 	}
-	b.ContainerPath = path.Join(b.Path, "root")
-	b.Container.SetPath(path.Join(b.Path, "root"))
+	b.ContainerPath = b.Path
+	b.Container.SetPath(b.Path)
 	return nil
 }
 

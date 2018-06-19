@@ -14,29 +14,30 @@ import (
 
 type Overlay struct {
 	Name        string
-	Path        string
+	RootPath    string
+	CurrentPath string
 	Directories map[string]string
 }
 
 func (o *Overlay) Setup() (string, error) {
-	rootContainerPath := path.Join(o.Path, "root")
-	err := os.MkdirAll(rootContainerPath, 0755)
+	err := os.MkdirAll(o.RootPath, 0755)
 	if err != nil {
 		return "", fmt.Errorf("Failed to setup overlay backend")
 	}
-	fileInfo := path.Join(rootContainerPath, ".arch-chroot-fs")
+	fileInfo := path.Join(o.RootPath, ".arch-chroot-fs")
 	err = ioutil.WriteFile(fileInfo, []byte("overlay"), 0644)
 	if err != nil {
 		return "", fmt.Errorf("Failed to write filesystem file")
 	}
-	return rootContainerPath, nil
+	return o.RootPath, nil
 }
 
 func (o *Overlay) AddSnapshot(name string) (string, error) {
-	o.Directories["root"] = path.Join(o.Path, "root")
-	o.Directories["build"] = path.Join(o.Path, name)
-	o.Directories["upperdir"] = path.Join(o.Path, name+"_upperdir")
-	o.Directories["workdir"] = path.Join(o.Path, name+"_workdir")
+	o.Directories["root"] = o.RootPath
+	directory, _ := path.Split(o.RootPath)
+	o.Directories["build"] = path.Join(directory, name)
+	o.Directories["upperdir"] = path.Join(directory, name+"_upperdir")
+	o.Directories["workdir"] = path.Join(directory, name+"_workdir")
 	for _, dirPath := range o.Directories {
 		err := os.MkdirAll(dirPath, 0755)
 		if err != nil {
@@ -52,7 +53,7 @@ func (o *Overlay) AddSnapshot(name string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Failed to mount with overlay: %s", err)
 	}
-	return path.Join(o.Path, name), nil
+	return o.Directories["build"], nil
 }
 
 func (o *Overlay) RemoveSnapshot(name string) error {
@@ -87,12 +88,13 @@ func (o *Overlay) Destroy() error {
 }
 
 func (o *Overlay) GetPath() string {
-	return o.Path
+	return o.CurrentPath
 }
 
 func NewOverlay(path string) backend.Backend {
 	return &Overlay{
-		Path:        path,
+		RootPath:    path,
+		CurrentPath: path,
 		Directories: make(map[string]string),
 	}
 }

@@ -49,7 +49,7 @@ func GetBackendFromContainer(containerPath string) (BackendFilesystem, error) {
 }
 
 func CheckContainerExists(containerPath string) bool {
-	fsFile := path.Join(containerPath, "root", ".arch-chroot-fs")
+	fsFile := path.Join(containerPath, ".arch-chroot-fs")
 	if _, err := os.Stat(fsFile); os.IsNotExist(err) {
 		return false
 	}
