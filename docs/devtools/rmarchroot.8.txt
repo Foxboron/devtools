@@ -1,0 +1,22 @@
+rmarchroot(8)
+=============
+
+Name
+----
+rmarchroot - removes an Arch Linux chroot
+
+
+Synopsis
+--------
+'rmarchroot' <path>
+
+
+Description
+-----------
+'rmarchroot' removes an Arch Linux chroot created by linkman:mkarchroot[8]. It
+attempts to find the backend used for the container, and removes it accordingly.
+
+
+See Also
+--------
+linkman:mkarchroot[8], linkman:devtools.backend[5]
