@@ -1,0 +1,51 @@
+mkarchroot(8)
+=============
+
+Name
+----
+mkarchroot - create an Arch Linux chroot
+
+
+Synopsis
+--------
+'mkarchroot' [options] <path> <packages>
+
+
+Description
+-----------
+'mkarchroot' creates an Arch Linux chroot with a given bootstrap or backend for
+the purpose of creating packages.
+
+
+Options
+-------
+*-b* <backend> ::
+        Specify the bootstrap method for the container. See linkman:devtools.bootstrap[5]
+        Default: archiso
+
+*-c* <path>::
+        Specify the pacman cache to use.
+        Default: /var/cache/pacman/pkg
+
+*-t* <backend>::
+       Specify the backend filesystem for the containers. See linkman:devtools.backend[5]
+       Default: overlay
+
+*-h*::
+       The help message
+
+*-s*::
+       Wether or not to run setarch. (Not used) 
+
+*-C* <file>::
+        Specify a linkman:pacman.conf[5] file to use for the build container.
+        Default: /etc/pacman.conf
+
+*-M* <file>::
+        Specify a linkman:makepkg.conf[5] file to use for the build container.
+        Default: /etc/makepkg.conf
+
+
+See Also
+--------
+linkman:rmarchroot[8], linkman:devtools.backend[5], linkman:devtools.bootstrap[5]
