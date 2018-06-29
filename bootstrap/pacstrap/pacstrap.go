@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
+	"errors"
 
 	alpm "github.com/Jguer/go-alpm"
+	"github.com/xyproto/argbuilder"
 )
 
 // Defaults
@@ -24,27 +25,17 @@ type Pacstrap struct {
 }
 
 func (p *Pacstrap) Init(path string) error {
-	var cmd *exec.Cmd
-	argArr := make([]string, 0)
-	argArr = append(argArr, "sudo")
-	argArr = append(argArr, "/usr/bin/pacstrap")
-	argArr = append(argArr, "-"+p.Flags)
+	ab := argbuilder.New("sudo", "/usr/bin/pacstrap", "-" + p.Flags)
 	if p.PacmanConf != "" {
-		argArr = append(argArr, "-C "+p.PacmanConf)
+		ab.Add("-C " + p.PacmanConf)
 	}
 	// append root directory
-	argArr = append(argArr, path)
+	ab.Add(path)
 	// Append packages we want
-	for _, v := range p.Packages {
-		argArr = append(argArr, v)
+	ab.AddStrings(p.Packages)
+	if ab.Run() != nil {
+		return errors.New("Can't setup locale")
 	}
-	cmd = exec.Command(argArr[0], argArr[1:]...)
-	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		return fmt.Errorf("Can't setup locale")
-	}
-
 	return nil
 }
 
